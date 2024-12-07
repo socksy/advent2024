@@ -3,12 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
-
 
 func check(e error) {
 	if e != nil {
@@ -16,20 +15,13 @@ func check(e error) {
 	}
 }
 
-func openFile(filename string) (*os.File) {
-	file, err := os.Open("input")
-	check(err)
-	defer file.Close()
-	return(file)
-}
-
-func readLists(file io.Reader) ([]int, []int) {
+func readLists(file *os.File) ([]int, []int) {
 	scanner := bufio.NewScanner(file)
 	var left, right []int
+
 	for scanner.Scan() {
 		nl := scanner.Text()
 		nums := strings.Split(nl, "   ")
-		fmt.Println("nl"+ nl)
 		l, err := strconv.Atoi(nums[0])
 		check(err)
 		r, err := strconv.Atoi(nums[1])
@@ -41,9 +33,46 @@ func readLists(file io.Reader) ([]int, []int) {
 	return left, right
 }
 
-func main()  {
-	inputFile := openFile("input")
+func sumDifferences(left []int, right []int) uint64 {
+	sort.Ints(left)
+	sort.Ints(right)
+	sum := uint64(0)
+	for i, l := range left {
+		r := right[i]
+
+		var diff int
+		if l > r {
+			diff = l - r
+		} else {
+			diff = r - l
+		}
+
+		sum += uint64(diff)
+	}
+	return sum
+}
+
+func similarityScore(left []int, right []int) int {
+	similarCounter := 0
+	for _, l := range left {
+		for _, r := range right {
+			if l == r {
+				similarCounter += l
+			}
+		}
+	}
+	return similarCounter
+}
+
+func main() {
+	inputFile, err := os.Open("input")
+	check(err)
+	defer inputFile.Close()
+
 	left, right := readLists(inputFile)
-	fmt.Printf("len=%d cap=%d\n", len(left), cap(left))
-	fmt.Printf("len=%d cap=%d\n", len(right), cap(right))
+	totalDiff := sumDifferences(left, right)
+	fmt.Println("total difference is", totalDiff)
+
+	similarityScore := similarityScore(left, right)
+	fmt.Println("similarity score is", similarityScore)
 }
